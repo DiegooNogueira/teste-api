@@ -47,7 +47,7 @@ app.listen(9000, () => console.log("Express started at http://localhost:9000"));
 async function getBrowser() {
   const browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox"],
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
   return browser;
 }
