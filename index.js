@@ -12,6 +12,8 @@ app.use(bodyParser.urlencoded({ extended: false, limit: "8000mb" }));
 app.use(bodyParser.json());
 app.use(cors());
 
+const port = process.env.PORT || 9000;
+
 // criação de rota que será acessada utilizando o método HTTP GET/
 // http://localhost:9000/
 app.get("/wws", async (req, res) => {
@@ -42,7 +44,7 @@ app.get("/todo", async (req, res) => {
 
 
 // o servidor irá rodar dentro da porta 9000
-app.listen(9000, () => console.log("Express started at http://localhost:9000"));
+app.listen(port, () => console.log('server runing on port:', port));
 
 async function getBrowser() {
   const browser = await puppeteer.launch({
