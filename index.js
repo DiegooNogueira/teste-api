@@ -14,34 +14,14 @@ app.use(cors());
 
 const port = process.env.PORT || 9000;
 
-// criação de rota que será acessada utilizando o método HTTP GET/
-// http://localhost:9000/
-app.get("/wws", async (req, res) => {
-  const cpf = req.query.cpf;
-  const browser = await getBrowser();
-  const object = await getInformationWWSByCPF(browser, cpf);
-  await browser.close();
-  return res.json(object);
-});
-
-app.get("/transmann", async (req, res) => {
-  const cpf = req.query.cpf;
-  const browser = await getBrowser();
-  const object = await getInformationTransmannByCPF(browser, cpf);
-  await browser.close();
-  return res.json(object);
-});
-
-
 app.get("/todo", async (req, res) => {
   const cpf = req.query.cpf;
   const browser = await getBrowser();
-  const wws = await getInformationWWSByCPF(browser, cpf);
-  const transmann = await getInformationTransmannByCPF(browser, cpf);
+  const wws = await getDataWWSByCPF(browser, cpf);
+  const transmann = await getDataTransmannByCPF(browser, cpf);
   await browser.close();
   return res.json({wws, transmann});
 });
-
 
 // o servidor irá rodar dentro da porta 9000
 app.listen(port, () => console.log('server runing on port:', port));
@@ -54,51 +34,85 @@ async function getBrowser() {
   return browser;
 }
 
-async function getInformationWWSByCPF(browser, cpf) {
+
+function delay(time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+
+async function getDataWWSByCPF(browser, cpf){
   const page = await browser.newPage();
   await page.goto("https://ssw.inf.br/2/rastreamento_pf");
   await page.type('input[name="cnpjdest"]', cpf);
   await page.click('a[id="btn_rastrear"]');
   await delay(1000);
-  const elements = await page.$$(".geral");
+  const content = await page.content();
+  const count = (content.match(/Nenhuma/g) || []).length;
+  if(count != 0){
+ return false;
+  }else{
 
-  const snap = await elements[2]
-    .screenshot({ encoding: "base64" })
-    .then(function (data) {
-      let base64Encode = `data:image/png;base64,${data}`;
-      return base64Encode;
-    });
+     // selecionar o elemento pai com a classe "trackviewitem nota"
+     const elementoNota = await page.$('body > div:nth-child(5) > div.table > div:nth-child(3) > table:nth-child(4) > tbody > tr:nth-child(2) > td:nth-child(1)');
+     const textoNota = await page.evaluate(el => el.textContent, elementoNota)
+     
+     const elementoUltimaAtualizacao = await page.$('body > div:nth-child(5) > div.table > div:nth-child(3) > table:nth-child(4) > tbody > tr:nth-child(2) > td:nth-child(2)');
+     const textoUltimaAtualizacao = await page.evaluate(el => el.textContent, elementoUltimaAtualizacao)
+     
 
-  return snap;
+     const elementoStatus = await page.$('body > div:nth-child(5) > div.table > div:nth-child(3) > table:nth-child(4) > tbody > tr:nth-child(2) > td:nth-child(3)');
+     const textoStatus = await page.evaluate(el => el.textContent, elementoStatus)
+
+    
+     
+     return [  ['Nota/Pedido', textoNota], ['Ultima Atualização', textoUltimaAtualizacao], ['Status', textoStatus]];
+  
+  }
+  
 }
 
-async function getInformationTransmannByCPF(browser, cpf) {
+async function getDataTransmannByCPF(browser, cpf){
   const page = await browser.newPage();
   await page.goto("https://www.transmann.com.br/AutoTracking?track=" + cpf);
   await delay(5000);
-  const elements = await page.$$(".contentbody");
-  const secondElement = elements[1];
+  const content = await page.content();
 
-  const snap = await secondElement
-    .screenshot({ encoding: "base64" })
-    .then(function (data) {
-      let base64Encode = `data:image/png;base64,${data}`;
-      return base64Encode;
-    });
+  if (content.includes('Sem resultados')) {
+    return false;
+  } else {
+       // selecionar o elemento pai com a classe "trackviewitem nota"
+        const elementoNota = await page.$('#tabs-1 > div.tracks-result > div.trackviewcontent > div > div.trackviewitem.nota > span');
+        const textoNota = await page.evaluate(el => el.textContent, elementoNota)
+        
+        const elementoPrevisao = await page.$('#tabs-1 > div.tracks-result > div.trackviewcontent > div > div.trackviewitem.previsao > span');
+        const textoPrevisao = await page.evaluate(el => el.textContent, elementoPrevisao)
+        
 
-  return snap;
+        const elementoStatus = await page.$('#tabs-1 > div.tracks-result > div.trackviewcontent > div > div.trackviewitem.status > span');
+        const textoStatus = await page.evaluate(el => el.textContent, elementoStatus)
+
+
+        const elementoRementente = await page.$('#tabs-1 > div.tracks-result > div.trackviewcontent > div > div.trackviewitem.remetente');
+        const textoRementente = await page.evaluate(el => el.textContent, elementoRementente)
+
+
+        const elementoDestinatario = await page.$('#tabs-1 > div.tracks-result > div.trackviewcontent > div > div.trackviewitem.destinatario');
+        const textoDestinatario = await page.evaluate(el => el.textContent, elementoDestinatario)
+
+        
+        return [['Remetente', textoRementente], ['Destinatário', textoDestinatario],  ['Nota/Pedido', textoNota], ['Previsão', textoPrevisao], ['Status', textoStatus]];
+  }
 }
+
 
 // (async () => {
 //   const browser = await getBrowser();
-//   const a = await getInformationWWSByCPF(browser, "49752120563");
-//   const b = await getInformationTransmannByCPF(browser, "49752120563");
-
+//   //49752120563
+//   //07509531608
+//   const a = await getDataWWSByCPF(browser, '07509531608');
+//   const b = await getDataTransmannByCPF(browser, '49752120563')
 //   console.log(a);
 //   console.log(b);
 //   await browser.close();
+//   process.exit();
 // })();
-
-function delay(time) {
-  return new Promise((resolve) => setTimeout(resolve, time));
-}
