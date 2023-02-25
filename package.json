@@ -8,5 +8,15 @@
     "puppeteer": "^9.1.1",
     "request-promise-native": "^1.0.9",
     "user-agents": "^1.0.1288"
-  }
+  },
+  "name": "poc-jadlog",
+  "description": "",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC"
 }
