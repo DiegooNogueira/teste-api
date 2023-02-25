@@ -42,7 +42,8 @@ function delay(time) {
 
 async function getDataWWSByCPF(browser, cpf){
   const page = await browser.newPage();
-  await page.goto("https://ssw.inf.br/2/rastreamento_pf");
+  const link = "https://ssw.inf.br/2/rastreamento_pf";
+  await page.goto(link);
   await page.type('input[name="cnpjdest"]', cpf);
   await page.click('a[id="btn_rastrear"]');
   await delay(1000);
@@ -65,7 +66,7 @@ async function getDataWWSByCPF(browser, cpf){
 
     
      
-     return [  ['Nota/Pedido', textoNota], ['Ultima Atualização', textoUltimaAtualizacao], ['Status', textoStatus]];
+     return [  ['Nota/Pedido', textoNota], ['Ultima Atualização', textoUltimaAtualizacao], ['Status', textoStatus], ['Saiba mais em', link]];
   
   }
   
@@ -73,7 +74,8 @@ async function getDataWWSByCPF(browser, cpf){
 
 async function getDataTransmannByCPF(browser, cpf){
   const page = await browser.newPage();
-  await page.goto("https://www.transmann.com.br/AutoTracking?track=" + cpf);
+  const link = "https://www.transmann.com.br/AutoTracking?track=" + cpf;
+  await page.goto(link);
   await delay(5000);
   const content = await page.content();
 
@@ -100,7 +102,7 @@ async function getDataTransmannByCPF(browser, cpf){
         const textoDestinatario = await page.evaluate(el => el.textContent, elementoDestinatario)
 
         
-        return [['Remetente', textoRementente], ['Destinatário', textoDestinatario],  ['Nota/Pedido', textoNota], ['Previsão', textoPrevisao], ['Status', textoStatus]];
+        return [['Remetente', textoRementente], ['Destinatário', textoDestinatario],  ['Nota/Pedido', textoNota], ['Previsão', textoPrevisao], ['Status', textoStatus], ['Saiba mais em', link]];
   }
 }
 
